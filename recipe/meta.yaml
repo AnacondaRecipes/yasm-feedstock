@@ -10,23 +10,18 @@ source:
   sha1: b7574e9f0826bedef975d64d3825f75fbaeef55e
 
 build:
-  number: 0
-  skip: true  # [(unix and py3k) or (win and py36)]
+  number: 1
   features:
-    - vc9     # [win and py27]
-    - vc10    # [win and py34]
-    - vc14    # [win and py35]
-    - vc14    # [win and py36]
+    - vc{{ vc }}    # [win]
 
 requirements:
   build:
+    - {{ compiler('c') }}
     - cmake   # [win]
-    - python
+  # host:
+  #   - python
 
 test:
-  requires:
-    - python {{ environ['PY_VER'] + '*' }}  # [win]
-
   commands:
     - test -f ${PREFIX}/lib/libyasm.a              # [unix]
     - if not exist %LIBRARY_LIB%\\yasm.lib exit 1  # [win]

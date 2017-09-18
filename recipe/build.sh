@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./configure --prefix=$PREFIX
+./configure --build=$BUILD --host=$HOST --prefix=$PREFIX
 make
 make check
 make install
