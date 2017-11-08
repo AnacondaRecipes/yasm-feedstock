@@ -10,14 +10,20 @@ source:
   sha1: b7574e9f0826bedef975d64d3825f75fbaeef55e
 
 build:
-  number: 1
-  features:
-    - vc{{ vc }}    # [win]
+  skip: True  # [win and vc != 14]
+  number: 2
+  # we only build with vc14 on win.  Since there are no shared libraries, we just need to ensure the right runtime,
+  #    not line up shared libs
+  ignore_run_exports:
+    - vc
+
 
 requirements:
   build:
     - {{ compiler('c') }}
     - cmake   # [win]
+  run:
+    - vs2015_runtime   # [win]
   # host:
   #   - python
 
