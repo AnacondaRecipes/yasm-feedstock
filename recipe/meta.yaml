@@ -17,15 +17,13 @@ build:
   ignore_run_exports:
     - vc
 
-
 requirements:
   build:
     - {{ compiler('c') }}
-    - cmake   # [win]
+    - cmake  # [win]
+    - make  # [not win]
   run:
     - vs2015_runtime   # [win]
-  # host:
-  #   - python
 
 test:
   commands:
