@@ -22,6 +22,7 @@ requirements:
     - {{ compiler('c') }}
     - cmake  # [win]
     - make  # [not win]
+    - libtool  # [not win]
   run:
     - vs2015_runtime   # [win]
 
