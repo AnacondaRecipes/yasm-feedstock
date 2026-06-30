@@ -6,12 +6,14 @@ package:
 
 source:
   fn: yasm-{{ version }}.tar.gz
-  url: http://www.tortall.net/projects/yasm/releases/yasm-{{ version }}.tar.gz
-  sha1: b7574e9f0826bedef975d64d3825f75fbaeef55e
+  url: https://www.tortall.net/projects/yasm/releases/yasm-{{ version }}.tar.gz
+  sha256: 3dce6601b495f5b3d45b59f7d2492a340ee7e84b5beca17e48f862502bd5603f
+  patches:
+    - patches/0001-fix-cmake-4-deprecated-apis.patch  # [win]
 
 build:
   skip: True  # [win and vc != 14]
-  number: 2
+  number: 3
   # we only build with vc14 on win.  Since there are no shared libraries, we just need to ensure the right runtime,
   #    not line up shared libs
   ignore_run_exports:
@@ -20,11 +22,13 @@ build:
 requirements:
   build:
     - {{ compiler('c') }}
+    - {{ stdlib('c') }}
     - cmake  # [win]
+    - python  # [win]
     - make  # [not win]
     - libtool  # [not win]
   run:
-    - vs2015_runtime   # [win]
+    - vc14_runtime   # [win]
 
 test:
   commands:
@@ -37,9 +41,17 @@ test:
     - yasm --version
 
 about:
-  home: http://www.tortall.net/projects/yasm/
-  license: BSD 3-Clause
+  home: https://github.com/yasm/yasm
+  dev_url: https://github.com/yasm/yasm
+  doc_url: https://github.com/yasm/yasm/blob/master/README
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: COPYING
   summary: 'Yasm is a complete rewrite of the NASM assembler under the "new" BSD License.'
+  description: |
+    Yasm is a complete rewrite of the NASM assembler under the "new" BSD License.
+    It supports x86 and AMD64 instruction sets, NASM and GAS syntaxes, and multiple
+    object formats including ELF, COFF, Mach-O, and Win32/Win64.
 
 extra:
   recipe-maintainers:

@@ -1,0 +1,123 @@
+From aa9469c8a7fc371e0ea224884e36081605850f1f Mon Sep 17 00:00:00 2001
+From: Eric Lundby <Eric.Lundby@gmail.com>
+Date: Tue, 30 Jun 2026 10:57:26 -0600
+Subject: [PATCH] fix(cmake): replace deprecated APIs for CMake 4 compatibility
+
+Yasm's CMake build fails under CMake 4 because it uses removed
+get_target_property(LOCATION) and FindPythonInterp. Bump the minimum
+CMake version, switch to FindPython3, and use generator expressions
+for build-tool paths.
+---
+ CMakeLists.txt                       |  2 +-
+ ConfigureChecks.cmake                |  6 ++----
+ cmake/modules/YasmMacros.cmake       | 15 ++++++---------
+ modules/preprocs/nasm/CMakeLists.txt |  5 ++---
+ plugins/x86/CMakeLists.txt           |  5 ++---
+ 5 files changed, 13 insertions(+), 20 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8df871c..e522693 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ PROJECT(yasm)
+-CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
++CMAKE_MINIMUM_REQUIRED(VERSION 3.5...4.0)
+ if (COMMAND cmake_policy)
+     cmake_policy(SET CMP0003 NEW)
+ endif (COMMAND cmake_policy)
+diff --git a/ConfigureChecks.cmake b/ConfigureChecks.cmake
+index 4b05d04..f5ed9fd 100644
+--- a/ConfigureChecks.cmake
++++ b/ConfigureChecks.cmake
+@@ -34,10 +34,8 @@ CONFIGURE_FILE(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+ 
+ ADD_DEFINITIONS(-DHAVE_CONFIG_H)
+ 
+-INCLUDE(FindPythonInterp)
+-IF (NOT PYTHON_EXECUTABLE)
+-    MESSAGE(FATAL_ERROR "Could not find Python executable")
+-ENDIF (NOT PYTHON_EXECUTABLE)
++FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter)
++SET(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+ 
+ IF (CMAKE_COMPILER_IS_GNUCXX)
+     CHECK_C_COMPILER_FLAG(-pipe C_ACCEPTS_PIPE)
+diff --git a/cmake/modules/YasmMacros.cmake b/cmake/modules/YasmMacros.cmake
+index ab1be00..e6006b3 100644
+--- a/cmake/modules/YasmMacros.cmake
++++ b/cmake/modules/YasmMacros.cmake
+@@ -58,31 +58,28 @@ macro (YASM_ADD_MODULE _module_NAME)
+ endmacro (YASM_ADD_MODULE)
+ 
+ macro (YASM_GENPERF _in_NAME _out_NAME)
+-    get_target_property(_tmp_GENPERF_EXE genperf LOCATION)
+     add_custom_command(
+         OUTPUT ${_out_NAME}
+-        COMMAND ${_tmp_GENPERF_EXE} ${_in_NAME} ${_out_NAME}
+-        DEPENDS ${_tmp_GENPERF_EXE}
++        COMMAND $<TARGET_FILE:genperf> ${_in_NAME} ${_out_NAME}
++        DEPENDS genperf
+         MAIN_DEPENDENCY ${_in_NAME}
+         )
+ endmacro (YASM_GENPERF)
+ 
+ macro (YASM_RE2C _in_NAME _out_NAME)
+-    get_target_property(_tmp_RE2C_EXE re2c LOCATION)
+     add_custom_command(
+         OUTPUT ${_out_NAME}
+-        COMMAND ${_tmp_RE2C_EXE} ${ARGN} -o ${_out_NAME} ${_in_NAME}
+-        DEPENDS ${_tmp_RE2C_EXE}
++        COMMAND $<TARGET_FILE:re2c> ${ARGN} -o ${_out_NAME} ${_in_NAME}
++        DEPENDS re2c
+         MAIN_DEPENDENCY ${_in_NAME}
+         )
+ endmacro (YASM_RE2C)
+ 
+ macro (YASM_GENMACRO _in_NAME _out_NAME _var_NAME)
+-    get_target_property(_tmp_GENMACRO_EXE genmacro LOCATION)
+     add_custom_command(
+         OUTPUT ${_out_NAME}
+-        COMMAND ${_tmp_GENMACRO_EXE} ${_out_NAME} ${_var_NAME} ${_in_NAME}
+-        DEPENDS ${_tmp_GENMACRO_EXE}
++        COMMAND $<TARGET_FILE:genmacro> ${_out_NAME} ${_var_NAME} ${_in_NAME}
++        DEPENDS genmacro
+         MAIN_DEPENDENCY ${_in_NAME}
+         )
+ endmacro (YASM_GENMACRO)
+diff --git a/modules/preprocs/nasm/CMakeLists.txt b/modules/preprocs/nasm/CMakeLists.txt
+index e10a9dd..31e7a03 100644
+--- a/modules/preprocs/nasm/CMakeLists.txt
++++ b/modules/preprocs/nasm/CMakeLists.txt
+@@ -1,9 +1,8 @@
+ add_executable(genversion preprocs/nasm/genversion.c)
+-get_target_property(_tmp_GENVERSION_EXE genversion LOCATION)
+ add_custom_command(
+     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.mac
+-    COMMAND ${_tmp_GENVERSION_EXE} ${CMAKE_CURRENT_BINARY_DIR}/version.mac
+-    DEPENDS ${_tmp_GENVERSION_EXE}
++    COMMAND $<TARGET_FILE:genversion> ${CMAKE_CURRENT_BINARY_DIR}/version.mac
++    DEPENDS genversion
+     )
+ 
+ YASM_GENMACRO(
+diff --git a/plugins/x86/CMakeLists.txt b/plugins/x86/CMakeLists.txt
+index d0e10da..1735120 100644
+--- a/plugins/x86/CMakeLists.txt
++++ b/plugins/x86/CMakeLists.txt
+@@ -74,10 +74,9 @@ IF (NOT YASM_LIBRARY)
+     MESSAGE(FATAL_ERROR "Could not find yasm library")
+ ENDIF (NOT YASM_LIBRARY)
+ 
+-INCLUDE(FindPythonInterp)
+-
+ IF (NOT PYTHON_EXECUTABLE)
+-    MESSAGE(FATAL_ERROR "Could not find Python executable")
++    FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter)
++    SET(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+ ENDIF (NOT PYTHON_EXECUTABLE)
+ 
+ INCLUDE_DIRECTORIES(${SOURCE_DIR})
+-- 
+2.50.1 (Apple Git-155)
+
