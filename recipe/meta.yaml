@@ -9,7 +9,7 @@ source:
   url: https://www.tortall.net/projects/yasm/releases/yasm-{{ version }}.tar.gz
   sha256: 3dce6601b495f5b3d45b59f7d2492a340ee7e84b5beca17e48f862502bd5603f
   patches:
-    - patches/cmake4.patch  # [win]
+    - patches/0001-fix-cmake-4-deprecated-apis.patch  # [win]
 
 build:
   skip: True  # [win and vc != 14]
