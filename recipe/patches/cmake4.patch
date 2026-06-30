@@ -1,0 +1,93 @@
+--- a/CMakeLists.txt	2026-06-30 09:30:02
++++ b/CMakeLists.txt	2026-06-30 09:30:02
+@@ -1,5 +1,5 @@
+ PROJECT(yasm)
+-CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
++CMAKE_MINIMUM_REQUIRED(VERSION 3.5...4.0)
+ if (COMMAND cmake_policy)
+     cmake_policy(SET CMP0003 NEW)
+ endif (COMMAND cmake_policy)
+--- a/ConfigureChecks.cmake	2026-06-30 09:30:02
++++ b/ConfigureChecks.cmake	2026-06-30 09:30:02
+@@ -34,10 +34,8 @@
+ 
+ ADD_DEFINITIONS(-DHAVE_CONFIG_H)
+ 
+-INCLUDE(FindPythonInterp)
+-IF (NOT PYTHON_EXECUTABLE)
+-    MESSAGE(FATAL_ERROR "Could not find Python executable")
+-ENDIF (NOT PYTHON_EXECUTABLE)
++FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter)
++SET(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+ 
+ IF (CMAKE_COMPILER_IS_GNUCXX)
+     CHECK_C_COMPILER_FLAG(-pipe C_ACCEPTS_PIPE)
+--- a/cmake/modules/YasmMacros.cmake	2026-06-30 09:30:02
++++ b/cmake/modules/YasmMacros.cmake	2026-06-30 09:30:02
+@@ -58,31 +58,28 @@
+ endmacro (YASM_ADD_MODULE)
+ 
+ macro (YASM_GENPERF _in_NAME _out_NAME)
+-    get_target_property(_tmp_GENPERF_EXE genperf LOCATION)
+     add_custom_command(
+         OUTPUT ${_out_NAME}
+-        COMMAND ${_tmp_GENPERF_EXE} ${_in_NAME} ${_out_NAME}
+-        DEPENDS ${_tmp_GENPERF_EXE}
++        COMMAND $<TARGET_FILE:genperf> ${_in_NAME} ${_out_NAME}
++        DEPENDS genperf
+         MAIN_DEPENDENCY ${_in_NAME}
+         )
+ endmacro (YASM_GENPERF)
+ 
+ macro (YASM_RE2C _in_NAME _out_NAME)
+-    get_target_property(_tmp_RE2C_EXE re2c LOCATION)
+     add_custom_command(
+         OUTPUT ${_out_NAME}
+-        COMMAND ${_tmp_RE2C_EXE} ${ARGN} -o ${_out_NAME} ${_in_NAME}
+-        DEPENDS ${_tmp_RE2C_EXE}
++        COMMAND $<TARGET_FILE:re2c> ${ARGN} -o ${_out_NAME} ${_in_NAME}
++        DEPENDS re2c
+         MAIN_DEPENDENCY ${_in_NAME}
+         )
+ endmacro (YASM_RE2C)
+ 
+ macro (YASM_GENMACRO _in_NAME _out_NAME _var_NAME)
+-    get_target_property(_tmp_GENMACRO_EXE genmacro LOCATION)
+     add_custom_command(
+         OUTPUT ${_out_NAME}
+-        COMMAND ${_tmp_GENMACRO_EXE} ${_out_NAME} ${_var_NAME} ${_in_NAME}
+-        DEPENDS ${_tmp_GENMACRO_EXE}
++        COMMAND $<TARGET_FILE:genmacro> ${_out_NAME} ${_var_NAME} ${_in_NAME}
++        DEPENDS genmacro
+         MAIN_DEPENDENCY ${_in_NAME}
+         )
+ endmacro (YASM_GENMACRO)
+--- a/modules/preprocs/nasm/CMakeLists.txt	2026-06-30 09:30:02
++++ b/modules/preprocs/nasm/CMakeLists.txt	2026-06-30 09:30:02
+@@ -1,9 +1,8 @@
+ add_executable(genversion preprocs/nasm/genversion.c)
+-get_target_property(_tmp_GENVERSION_EXE genversion LOCATION)
+ add_custom_command(
+     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.mac
+-    COMMAND ${_tmp_GENVERSION_EXE} ${CMAKE_CURRENT_BINARY_DIR}/version.mac
+-    DEPENDS ${_tmp_GENVERSION_EXE}
++    COMMAND $<TARGET_FILE:genversion> ${CMAKE_CURRENT_BINARY_DIR}/version.mac
++    DEPENDS genversion
+     )
+ 
+ YASM_GENMACRO(
+--- a/plugins/x86/CMakeLists.txt	2026-06-30 09:30:02
++++ b/plugins/x86/CMakeLists.txt	2026-06-30 09:30:13
+@@ -74,10 +74,9 @@
+     MESSAGE(FATAL_ERROR "Could not find yasm library")
+ ENDIF (NOT YASM_LIBRARY)
+ 
+-INCLUDE(FindPythonInterp)
+-
+ IF (NOT PYTHON_EXECUTABLE)
+-    MESSAGE(FATAL_ERROR "Could not find Python executable")
++    FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter)
++    SET(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+ ENDIF (NOT PYTHON_EXECUTABLE)
+ 
+ INCLUDE_DIRECTORIES(${SOURCE_DIR})
